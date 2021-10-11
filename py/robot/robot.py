@@ -55,8 +55,8 @@ class SpartaBot(magicbot.MagicRobot):
         self.drive = wpilib.drive.DifferentialDrive(self.left, self.right)
         self.drive.setExpiration(0.1)
 
-        # self.shifter_shiftsolenoid = wpilib.Solenoid(1)
         self.shifter_shiftsolenoid = wpilib.Solenoid(0)
+
         self.shift_toggle = True
 
         # shooter
