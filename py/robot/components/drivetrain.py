@@ -8,7 +8,9 @@ from magicbot import tunable
 import navx
 
 from constants import TALON_TIMEOUT
-from common import util
+# Used to be in common
+import util
+
 
 DifferentialDriveConfig = namedtuple('DifferentialDriveConfig',
                                      ['y', 'rotation', 'squared',
