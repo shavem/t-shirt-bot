@@ -75,7 +75,6 @@ class SpartaBot(magicbot.MagicRobot):
 
     def teleopPeriodic(self):
 
-        # drivetrain
         # Solenoid test
         if self.drive_controller.getBButtonReleased():
             self.solenoid.set(self.shift_toggle)
