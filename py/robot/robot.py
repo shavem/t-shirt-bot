@@ -1,16 +1,9 @@
 import wpilib
 import ctre
 import magicbot
-# import navx
 import wpilib.drive
-# from enum import IntEnum
 from wpilib import Solenoid, DoubleSolenoid
 
-# from components import shooterFalcon, elevator #, shifter, intake, tower
-# from components.shooterFalcon import Shooter
-# from wpilib.drive import DifferentialDrive
-# from networktables import NetworkTables
-# from magicbot import timed_state, state
 
 
 '''python py/robot/robot.py deploy --skip-tests'''
