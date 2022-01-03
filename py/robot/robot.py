@@ -29,8 +29,11 @@ class SpartaBot(magicbot.MagicRobot):
 
     def createObjects(self):
         self.compressor = wpilib.Compressor()
-        self.solenoid = wpilib.DoubleSolenoid(0, 1)
-        self.shift_toggle = DoubleSolenoid.Value.kForward
+        self.solenoidp1 = wpilib.Solenoid(0)
+        self.solenoidp2 = wpilib.Solenoid(1)
+        # self.solenoid = wpilib.DoubleSolenoid(0, 1)
+        self.shift_toggle1 = DoubleSolenoid.Value.kForward
+        self.shift_toggle2 = DoubleSolenoid.Value.kReverse
 
         self.drive_controller = wpilib.XboxController(1)
 
@@ -70,11 +73,14 @@ class SpartaBot(magicbot.MagicRobot):
 
         # Solenoid test
         if self.drive_controller.getBButtonReleased():
-            self.solenoid.set(self.shift_toggle)
-            if (self.shift_toggle == DoubleSolenoid.Value.kForward):
-                self.shift_toggle = DoubleSolenoid.Value.kReverse
+            self.solenoidp1.set(self.shift_toggle1)
+            self.solenoidp2.set(self.shift_toggle2)
+            if (self.shift_toggle1 == DoubleSolenoid.Value.kForward):
+                self.shift_toggle1 = DoubleSolenoid.Value.kReverse
+                self.shift_toggle2 = DoubleSolenoid.Value.kForward
             else:
-                self.shift_toggle = DoubleSolenoid.Value.kForward
+                self.shift_toggle1 = DoubleSolenoid.Value.kForward
+                self.shift_toggle2 = DoubleSolenoid.Value.kReverse
 
 
         angle = self.drive_controller.getX(CONTROLLER_RIGHT)
