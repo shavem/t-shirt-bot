@@ -3,6 +3,7 @@ import ctre
 import magicbot
 import wpilib.drive
 from wpilib import Solenoid, DoubleSolenoid
+import time
 
 
 
@@ -31,8 +32,8 @@ class SpartaBot(magicbot.MagicRobot):
         self.compressor = wpilib.Compressor()
         # self.solenoidp1 = wpilib.Solenoid(0)
         # self.solenoidp2 = wpilib.Solenoid(1)
-        self.solenoid = wpilib.DoubleSolenoid(1, 2)
-        self.solenoid.set(DoubleSolenoid.Value.kForward)
+        self.solenoid = wpilib.DoubleSolenoid(0, 1)
+        self.solenoid.set(DoubleSolenoid.Value.kReverse)
         # self.solenoidp1.set(True)
         # self.solenoidp2.set(True)
 
@@ -75,10 +76,16 @@ class SpartaBot(magicbot.MagicRobot):
 
         # Solenoid test
         if self.drive_controller.getBButtonReleased():
+            self.solenoid.set(DoubleSolenoid.Value.kForward)
+            time.sleep(0.5)
+            self.solenoid.set(DoubleSolenoid.Value.kReverse)
+            if self.solenoid.get() == DoubleSolenoid.Value.kForward:
+                print("Solenoid forward")
+            else:
+                print("Solenoid reverse")
+            if time
             # self.solenoidp1.toggle()
             # self.solenoidp2.toggle()
-            self.solenoid.toggle()
-            print(self.solenoid.get())
 
 
         angle = self.drive_controller.getX(CONTROLLER_RIGHT)
@@ -90,13 +97,13 @@ class SpartaBot(magicbot.MagicRobot):
 
 
         # shooter
-        if self.drive_controller.getTriggerAxis(CONTROLLER_RIGHT) > 0.01:
-            self.shooter_motor_master.set(-(self.drive_controller.getTriggerAxis(CONTROLLER_RIGHT)))
-            self.shooter_motor_slave.set(-self.drive_controller.getTriggerAxis(CONTROLLER_RIGHT))
-            # print("Shooter speed: " + str(self.drive_controller.getTriggerAxis(CONTROLLER_RIGHT)))
-        elif self.drive_controller.getTriggerAxis(CONTROLLER_LEFT) > 0.01:
-            self.shooter_motor_master.set(self.drive_controller.getTriggerAxis(CONTROLLER_LEFT))
-            self.shooter_motor_slave.set(self.drive_controller.getTriggerAxis(CONTROLLER_LEFT))
+        if self.drive_controller.getTriggerAxis(CONTROLLER_LEFT) > 0.01:
+            self.shooter_motor_master.set(-(self.drive_controller.getTriggerAxis(CONTROLLER_LEFT)))
+            self.shooter_motor_slave.set(-self.drive_controller.getTriggerAxis(CONTROLLER_LEFT))
+            print("Shooter speed: " + str(self.drive_controller.getTriggerAxis(CONTROLLER_LEFT)))
+        elif self.drive_controller.getTriggerAxis(CONTROLLER_RIGHT) > 0.01:
+            self.shooter_motor_master.set(self.drive_controller.getTriggerAxis(CONTROLLER_RIGHT))
+            self.shooter_motor_slave.set(self.drive_controller.getTriggerAxis(CONTROLLER_RIGHT))
             # print("Shooter speed: " + str(self.drive_controller.getTriggerAxis(CONTROLLER_LEFT)))
         else:
             self.shooter_motor_master.set(0)
