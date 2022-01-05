@@ -79,11 +79,6 @@ class SpartaBot(magicbot.MagicRobot):
             self.solenoid.set(DoubleSolenoid.Value.kForward)
             time.sleep(0.5)
             self.solenoid.set(DoubleSolenoid.Value.kReverse)
-            if self.solenoid.get() == DoubleSolenoid.Value.kForward:
-                print("Solenoid forward")
-            else:
-                print("Solenoid reverse")
-            if time
             # self.solenoidp1.toggle()
             # self.solenoidp2.toggle()
 
