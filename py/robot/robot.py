@@ -83,6 +83,7 @@ class SpartaBot(magicbot.MagicRobot):
             # self.solenoidp2.toggle()
 
 
+
         angle = self.drive_controller.getX(CONTROLLER_RIGHT)
         speed = self.drive_controller.getY(CONTROLLER_LEFT)
         if (abs(angle) > 0.08 or abs(speed) > 0.08):
