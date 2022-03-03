@@ -1,15 +1,30 @@
 import wpilib
-import ctre
+import rev
 import magicbot
 import wpilib.drive
+from networktables import NetworkTables
+import logging
 from wpilib import Solenoid, DoubleSolenoid
 import time
 
 
-
+# Push code to RoboRIO
 '''python py/robot/robot.py deploy --skip-tests'''
 
+# idrk what this does
 '''py -3 -m pip install -U robotpy[ctre]'''
+'''py -3 -m pip install robotpy[ctre]'''
+
+
+# Download and install stuff on the RoboRIO after imaging
+'''py -3 -m robotpy_installer download-python
+   py -3 -m robotpy_installer install-python
+   py -3 -m robotpy_installer download robotpy
+   py -3 -m robotpy_installer install robotpy
+   py -3 -m robotpy_installer download robotpy[ctre]
+   py -3 -m robotpy_installer install robotpy[ctre]
+   py -3 -m robotpy_installer download robotpy[rev]
+   py -3 -m robotpy_installer install robotpy[rev]'''
 
 
 '''
@@ -23,28 +38,37 @@ otherNumber = sd.getNumber('otherNumber')
 # ./py/venv/Scripts/activate
 '''
 
-CONTROLLER_LEFT = wpilib.XboxController.Hand.kLeftHand
-CONTROLLER_RIGHT = wpilib.XboxController.Hand.kRightHand
+# CONTROLLER_LEFT = wpilib.XboxController.Hand.kLeftHand
+# CONTROLLER_RIGHT = wpilib.XboxController.Hand.kRightHand
+PNEUMATICS_MODULE_TYPE = wpilib.PneumaticsModuleType.CTREPCM
+MOTOR_BRUSHED = rev._rev.CANSparkMaxLowLevel.MotorType.kBrushed
 
 class SpartaBot(magicbot.MagicRobot):
 
     def createObjects(self):
-        self.compressor = wpilib.Compressor()
+
+        # Initialize SmartDashboard
+        logging.basicConfig(level=logging.DEBUG)
+        NetworkTables.initialize(server='roborio-5045-frc.local')
+        self.sd = NetworkTables.getTable('SmartDashboard')
+
+
+
+        # self.compressor = wpilib.Compressor(PNEUMATICS_MODULE_TYPE)
         # self.solenoidp1 = wpilib.Solenoid(0)
         # self.solenoidp2 = wpilib.Solenoid(1)
-        self.solenoid = wpilib.DoubleSolenoid(0, 1)
-        self.solenoid.set(DoubleSolenoid.Value.kReverse)
+        # self.solenoid = wpilib.DoubleSolenoid(PNEUMATICS_MODULE_TYPE, 0, 1)
+        # self.solenoid.set(DoubleSolenoid.Value.kReverse)
         # self.solenoidp1.set(True)
         # self.solenoidp2.set(True)
-
 
         self.drive_controller = wpilib.XboxController(1)
 
         # drivetrain
-        self.drivetrain_left_motor_master = ctre.WPI_TalonSRX(3)
-        self.drivetrain_left_motor_slave = ctre.WPI_TalonSRX(4)
-        self.drivetrain_right_motor_master = ctre.WPI_TalonSRX(1)
-        self.drivetrain_right_motor_slave = ctre.WPI_TalonSRX(2)
+        self.drivetrain_right_motor_master = rev.CANSparkMax(1, MOTOR_BRUSHED)
+        self.drivetrain_right_motor_slave = rev.CANSparkMax(2, MOTOR_BRUSHED)
+        self.drivetrain_left_motor_master = rev.CANSparkMax(3, MOTOR_BRUSHED)
+        self.drivetrain_left_motor_slave = rev.CANSparkMax(4, MOTOR_BRUSHED)
         self.left = wpilib.SpeedControllerGroup(
             self.drivetrain_left_motor_master, self.drivetrain_left_motor_slave)
         self.right = wpilib.SpeedControllerGroup(
@@ -53,8 +77,8 @@ class SpartaBot(magicbot.MagicRobot):
         self.drive.setExpiration(0.1)
 
         # shooter
-        self.shooter_motor_master = ctre.WPI_TalonSRX(5)
-        self.shooter_motor_slave = ctre.WPI_TalonSRX(6)
+        # self.shooter_motor_master = ctre.WPI_TalonSRX(5)
+        # self.shooter_motor_slave = ctre.WPI_TalonSRX(6)
 
 
         # wpilib.CameraServer.launch()
@@ -75,35 +99,41 @@ class SpartaBot(magicbot.MagicRobot):
     def teleopPeriodic(self):
 
         # Solenoid test
-        if self.drive_controller.getBButtonReleased():
-            self.solenoid.set(DoubleSolenoid.Value.kForward)
-            time.sleep(0.5)
-            self.solenoid.set(DoubleSolenoid.Value.kReverse)
+        # if self.drive_controller.getBButtonReleased():
+        #     self.solenoid.set(DoubleSolenoid.Value.kForward)
+        #     time.sleep(0.5)
+        #     self.solenoid.set(DoubleSolenoid.Value.kReverse)
             # self.solenoidp1.toggle()
             # self.solenoidp2.toggle()
 
 
 
-        angle = self.drive_controller.getX(CONTROLLER_RIGHT)
-        speed = self.drive_controller.getY(CONTROLLER_LEFT)
+        angle = self.drive_controller.getRightX()
+        speed = self.drive_controller.getLeftY()
         if (abs(angle) > 0.08 or abs(speed) > 0.08):
-            self.drive.arcadeDrive(-speed, -angle, True)
+            self.drive.arcadeDrive(-angle, speed, True)
         else:
             self.drive.arcadeDrive(0, 0, True)
 
+        # Update SmartDashboard with motor speeds
+        self.sd.putNumber('Left Master Speed: ', self.drivetrain_left_motor_master.get())
+        self.sd.putNumber("Left Slave Speed: ", self.drivetrain_left_motor_slave.get())
+        self.sd.putNumber('Right Master Speed: ', self.drivetrain_right_motor_master.get())
+        self.sd.putNumber("Right Slave Speed: ", self.drivetrain_right_motor_slave.get())
+
 
         # shooter
-        if self.drive_controller.getTriggerAxis(CONTROLLER_LEFT) > 0.01:
-            self.shooter_motor_master.set(-(self.drive_controller.getTriggerAxis(CONTROLLER_LEFT)))
-            self.shooter_motor_slave.set(-self.drive_controller.getTriggerAxis(CONTROLLER_LEFT))
-            print("Shooter speed: " + str(self.drive_controller.getTriggerAxis(CONTROLLER_LEFT)))
-        elif self.drive_controller.getTriggerAxis(CONTROLLER_RIGHT) > 0.01:
-            self.shooter_motor_master.set(self.drive_controller.getTriggerAxis(CONTROLLER_RIGHT))
-            self.shooter_motor_slave.set(self.drive_controller.getTriggerAxis(CONTROLLER_RIGHT))
-            # print("Shooter speed: " + str(self.drive_controller.getTriggerAxis(CONTROLLER_LEFT)))
-        else:
-            self.shooter_motor_master.set(0)
-            self.shooter_motor_slave.set(0)
+        # if self.drive_controller.getLeftTriggerAxis() > 0.01:
+        #     self.shooter_motor_master.set(-(self.drive_controller.getLeftTriggerAxis()))
+        #     self.shooter_motor_slave.set(-self.drive_controller.getLeftTriggerAxis())
+        #     print("Shooter speed: " + str(self.drive_controller.getLeftTriggerAxis()))
+        # elif self.drive_controller.getRightTriggerAxis() > 0.01:
+        #     self.shooter_motor_master.set(self.drive_controller.getRightTriggerAxis())
+        #     self.shooter_motor_slave.set(self.drive_controller.getRightTriggerAxis())
+        #     # print("Shooter speed: " + str(self.drive_controller.getTriggerAxis(CONTROLLER_LEFT)))
+        # else:
+        #     self.shooter_motor_master.set(0)
+        #     self.shooter_motor_slave.set(0)
 
 
 
