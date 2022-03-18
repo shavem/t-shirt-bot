@@ -42,6 +42,7 @@ otherNumber = sd.getNumber('otherNumber')
 # CONTROLLER_RIGHT = wpilib.XboxController.Hand.kRightHand
 PNEUMATICS_MODULE_TYPE = wpilib.PneumaticsModuleType.CTREPCM
 MOTOR_BRUSHED = rev._rev.CANSparkMaxLowLevel.MotorType.kBrushed
+SPEED_MULTIPLIER = 0.8
 
 class SpartaBot(magicbot.MagicRobot):
 
@@ -65,20 +66,24 @@ class SpartaBot(magicbot.MagicRobot):
         self.drive_controller = wpilib.XboxController(1)
 
         # drivetrain
-        self.drivetrain_right_motor_master = rev.CANSparkMax(1, MOTOR_BRUSHED)
-        self.drivetrain_right_motor_slave = rev.CANSparkMax(2, MOTOR_BRUSHED)
-        self.drivetrain_left_motor_master = rev.CANSparkMax(3, MOTOR_BRUSHED)
-        self.drivetrain_left_motor_slave = rev.CANSparkMax(4, MOTOR_BRUSHED)
-        self.left = wpilib.SpeedControllerGroup(
-            self.drivetrain_left_motor_master, self.drivetrain_left_motor_slave)
-        self.right = wpilib.SpeedControllerGroup(
-            self.drivetrain_right_motor_master, self.drivetrain_right_motor_slave)
-        self.drive = wpilib.drive.DifferentialDrive(self.left, self.right)
-        self.drive.setExpiration(0.1)
+        # self.drivetrain_right_motor_master = rev.CANSparkMax(1, MOTOR_BRUSHED)
+        # self.drivetrain_right_motor_slave = rev.CANSparkMax(2, MOTOR_BRUSHED)
+        # self.drivetrain_left_motor_master = rev.CANSparkMax(3, MOTOR_BRUSHED)
+        # self.drivetrain_left_motor_slave = rev.CANSparkMax(4, MOTOR_BRUSHED)
+        # self.left = wpilib.SpeedControllerGroup(
+        #     self.drivetrain_left_motor_master, self.drivetrain_left_motor_slave)
+        # self.right = wpilib.SpeedControllerGroup(
+        #     self.drivetrain_right_motor_master, self.drivetrain_right_motor_slave)
+        # self.drive = wpilib.drive.DifferentialDrive(self.left, self.right)
+        # self.drive.setExpiration(0.1)
 
         # shooter
-        # self.shooter_motor_master = ctre.WPI_TalonSRX(5)
-        # self.shooter_motor_slave = ctre.WPI_TalonSRX(6)
+        self.shooter_motor_master = ctre.WPI_TalonSRX(3)
+        self.shooter_motor_slave = ctre.WPI_TalonSRX(4)
+
+        # Intake
+        self.intake_motor = rev.CANSparkMax(1, MOTOR_BRUSHED)
+        self.tower_motor = rev.CANSparkMax(2, MOTOR_BRUSHED)
 
 
         # wpilib.CameraServer.launch()
@@ -108,18 +113,12 @@ class SpartaBot(magicbot.MagicRobot):
 
 
 
-        angle = self.drive_controller.getRightX()
-        speed = self.drive_controller.getLeftY()
-        if (abs(angle) > 0.08 or abs(speed) > 0.08):
-            self.drive.arcadeDrive(-angle, speed, True)
-        else:
-            self.drive.arcadeDrive(0, 0, True)
-
-        # Update SmartDashboard with motor speeds
-        self.sd.putNumber('Left Master Speed: ', self.drivetrain_left_motor_master.get())
-        self.sd.putNumber("Left Slave Speed: ", self.drivetrain_left_motor_slave.get())
-        self.sd.putNumber('Right Master Speed: ', self.drivetrain_right_motor_master.get())
-        self.sd.putNumber("Right Slave Speed: ", self.drivetrain_right_motor_slave.get())
+        # angle = self.drive_controller.getRightX()
+        # speed = self.drive_controller.getLeftY()
+        # if (abs(angle) > 0.001 or abs(speed) > 0.001):
+        #     self.drive.arcadeDrive(-angle * SPEED_MULTIPLIER, speed * SPEED_MULTIPLIER, True)
+        # else:
+        #     self.drive.arcadeDrive(0, 0, True)
 
 
         # shooter
@@ -136,11 +135,44 @@ class SpartaBot(magicbot.MagicRobot):
         #     self.shooter_motor_slave.set(0)
 
 
+        # intake
+        if self.drive_controller.getLeftBumper():
+            self.intake_motor.set(0.4)
+            self.sd.putValue("Intake: ", "Counter-Clockwise")
+        elif self.drive_controller.getRightBumper():
+            self.intake_motor.set(-0.4)
+            self.sd.putValue("Intake: ", "Clockwise")
+        else:
+            self.intake_motor.set(0)
+            self.sd.putValue("Intake: ", "Not Spinning")
+
+
+        # tower
+        if self.drive_controller.getAButton():
+            self.tower_motor.set(0.3)
+            self.sd.putValue("Tower: ", "Going Up")
+        elif self.drive_controller.getBButton():
+            self.tower_motor.set(-0.3)
+            self.sd.putValue("Tower: ", "Going Down")
+        else:
+            self.tower_motor.set(0)
+            self.sd.putValue("Tower: ", "Not Spinning")
+
+
 
         # if self.drive_controller.getStickButtonReleased(CONTROLLER_LEFT):
         #     self.shifter_shiftsolenoid.set(False)
         # if self.drive_controller.getStickButtonReleased(CONTROLLER_RIGHT):
         #     self.shifter_shiftsolenoid.set(True)
+
+
+
+
+        #--------- Update SmartDashboard with motor speeds ---------#
+        # self.sd.putNumber('Left Master Speed: ', self.drivetrain_left_motor_master.get())
+        # self.sd.putNumber("Left Slave Speed: ", self.drivetrain_left_motor_slave.get())
+        # self.sd.putNumber('Right Master Speed: ', self.drivetrain_right_motor_master.get())
+        # self.sd.putNumber("Right Slave Speed: ", self.drivetrain_right_motor_slave.get())
 
 
 if __name__ == '__main__':
