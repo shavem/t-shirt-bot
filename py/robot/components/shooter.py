@@ -1,4 +1,5 @@
 # from limelight import limelight
+import time
 
 from magicbot import will_reset_to, tunable, feedback
 # from controllers.PIDSparkMax import PIDSparkMax
@@ -6,8 +7,8 @@ import networktables
 
 
 import wpilib
-from ctre import TalonSRX, ControlMode
-
+from ctre import TalonSRX, ControlMode, WPI_TalonFX
+from rev import CANSparkMax
 
 from typing import Tuple
 
@@ -15,18 +16,22 @@ from typing import Tuple
 class Shooter:
     limelight_state = will_reset_to(1)
     motor_rpm = will_reset_to(0)
+    motor_rpm_cache = will_reset_to(0)
     feeder_motor_speed = will_reset_to(0)
 
-    target_rpm = tunable(0.5)
-    feed_speed_setpoint = tunable(-1)
-    rpm_error = tunable(300)
+    # was 0.5
+    target_rpm = tunable(0.9)
+    # was -1
+    feed_speed_setpoint = -0.5
+    rpm_lower_error = tunable(0.05)
+    rpm_higher_error = tunable(0.05)
     x_aim_error = tunable(1.2)
     y_aim_error = tunable(2)
 
     # motor: PIDSparkMax
-    shooter_motor_left: TalonSRX
-    shooter_motor_right: TalonSRX
-    intake_motor: TalonSRX
+    shooter_motor_left: WPI_TalonFX
+    shooter_motor_right: WPI_TalonFX
+    tower_motor: CANSparkMax
     sd: networktables.NetworkTable
 
     # camera_state: int
@@ -84,17 +89,25 @@ class Shooter:
         Returns whether the current rpm of the motor is within
         a certain range, specified by the `rpm_error` property
         """
+        # return (
+        #     self.rpm_error + self.motor_rpm
+        #     > ((self.shooter_motor_right.get() + self.shooter_motor_left.get()) / 2)
+        #     > -self.rpm_error + self.motor_rpm
+        # )
+
         return (
-            self.rpm_error + self.motor_rpm
-            > ((self.shooter_motor_right.get() + self.shooter_motor_left.get()) / 2)
-            > -self.rpm_error + self.motor_rpm
+            self.rpm_lower_error + self.target_rpm
+            > (self.shooter_motor_right.get())
+            > -self.rpm_higher_error + self.target_rpm
         )
 
-    def shoot(self):
+    def shoot(self, speed: float):
         """
         Sets the shooter to start moving toward the setpoint
         """
-        self.motor_rpm = self.target_rpm
+        # self.motor_rpm = self.target_rpm
+        self.motor_rpm_cache = self.shooter_motor_right.get()
+        self.motor_rpm = speed
 
     def feed(self):
         """
@@ -111,21 +124,24 @@ class Shooter:
     def execute(self):
         # self.limelight.light(self.limelight_state)
         # self.limelight.pipeline(self.limelight_state)
-        if abs(self.motor_rpm) < 0.02:
+        if (self.motor_rpm < self.motor_rpm_cache):
+            time.sleep(0.01)
+            print("Slowing down")
+        if abs(self.motor_rpm) < 0.05:
             self.shooter_motor_right.stopMotor()
             self.shooter_motor_left.stopMotor()
         else:
             self.shooter_motor_right.set(self.motor_rpm)
-            self.shooter_motor_left.set(self.motor_rpm)
-        if (
-            abs(self.motor_rpm) > 0.05
-            and abs((self.shooter_motor_left.get() + self.shooter_motor_right.get()) / 2) > abs(self.motor_rpm) - self.rpm_error
-        ) or self.feeder_motor_speed:
-            if not self.feeder_motor_speed:
-                self.feed()
-            self.intake_motor.set(ControlMode.PercentOutput, self.feeder_motor_speed)
+            self.shooter_motor_left.set(-self.motor_rpm)
+        # if (abs(self.motor_rpm) > 0.05 and abs(self.shooter_motor_right.get()) > abs(self.target_rpm) - self.rpm_lower_error) or self.feeder_motor_speed:
+        #     # if self.feeder_motor_speed:
+        #     #     self.feed()
+        #     self.tower_motor.set(self.feeder_motor_speed)
+        if self.is_ready:
+            self.feed()
+            self.tower_motor.set(self.feeder_motor_speed)
         else:
-            self.intake_motor.set(ControlMode.PercentOutput, 0)
+            self.tower_motor.set(0)
         # self.feeder_motor.set(ControlMode.PercentOutput, self.feeder_motor_speed)
         self.log()
 
