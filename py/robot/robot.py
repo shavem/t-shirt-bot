@@ -34,6 +34,7 @@ import time
 PNEUMATICS_MODULE_TYPE = wpilib.PneumaticsModuleType.CTREPCM
 MOTOR_BRUSHED = rev._rev.CANSparkMaxLowLevel.MotorType.kBrushed
 SPEED_MULTIPLIER = 1
+ANGLE_MULTIPLIER = 0.7
 
 magicbot.MagicRobot.control_loop_wait_time = 0.02
 
@@ -84,6 +85,8 @@ class SpartaBot(magicbot.MagicRobot):
 
 
     def createObjects(self):
+        wpilib.CameraServer.launch()
+
 
         # Initialize SmartDashboard
         logging.basicConfig(level=logging.DEBUG)
@@ -92,10 +95,10 @@ class SpartaBot(magicbot.MagicRobot):
 
         self.limelight = NetworkTables.getTable("limelight")
 
-        self.compressor = wpilib.Compressor(PNEUMATICS_MODULE_TYPE)
-        self.solenoid = wpilib.DoubleSolenoid(PNEUMATICS_MODULE_TYPE, 2, 3)
-        # self.solenoid.set(DoubleSolenoid.Value.kReverse)
-        self.sd.putValue("Gear", "Unchanged")
+        # self.compressor = wpilib.Compressor(PNEUMATICS_MODULE_TYPE)
+        # self.solenoid = wpilib.DoubleSolenoid(PNEUMATICS_MODULE_TYPE, 2, 3)
+        # # self.solenoid.set(DoubleSolenoid.Value.kReverse)
+        # self.sd.putValue("Gear", "Unchanged")
 
         self.drive_controller = wpilib.XboxController(1)
 
@@ -187,7 +190,7 @@ class SpartaBot(magicbot.MagicRobot):
         angle = self.drive_controller.getRightX()
         speed = self.drive_controller.getLeftY()
         if (abs(angle) > 0.03 or abs(speed) > 0.03):
-            self.drive.arcadeDrive(-angle * SPEED_MULTIPLIER, -speed * SPEED_MULTIPLIER, True)
+            self.drive.arcadeDrive(-angle * ANGLE_MULTIPLIER, -speed * SPEED_MULTIPLIER, True)
             # self.sd.putValue('Drivetrain: ', -speed)
             self.sd.putValue("Speed ", speed)
             self.sd.putValue("Angle ", angle)
@@ -197,12 +200,24 @@ class SpartaBot(magicbot.MagicRobot):
 
         # shooter
         if self.drive_controller.getLeftTriggerAxis() > 0.05:
-            self.shooter_motor_left.set(self.drive_controller.getLeftTriggerAxis())
-            self.shooter_motor_right.set(-self.drive_controller.getLeftTriggerAxis())
-            self.sd.putValue("Shooter: ", -self.drive_controller.getLeftTriggerAxis())
+            # self.shooter_motor_left.set(self.drive_controller.getLeftTriggerAxis())
+            # self.shooter_motor_right.set(-self.drive_controller.getLeftTriggerAxis())
+            # self.sd.putValue("Shooter: ", -self.drive_controller.getLeftTriggerAxis())
+            self.intake_motor.set(-0.5)
+        elif self.drive_controller.getBButton():
+            self.intake_motor.set(0.3)
+            self.sd.putValue("Intake: ", "Out")
+        else:
+            self.intake_motor.set(0)
+
 
             # self.shooter_automation.fire(-self.drive_controller.getLeftTriggerAxis())
             # print("Shooter speed: " + str(self.drive_controller.getLeftTriggerAxis()))
+
+        if self.drive_controller.getAButton():
+            self.shooter_motor_left.set(-0.5)
+            self.shooter_motor_right.set(0.5)
+            self.sd.putValue("Shooter: ", 0.5)
         elif self.drive_controller.getRightTriggerAxis() > 0.05:
             self.shooter_motor_left.set(-self.drive_controller.getRightTriggerAxis())
             self.shooter_motor_right.set(self.drive_controller.getRightTriggerAxis())
@@ -215,15 +230,15 @@ class SpartaBot(magicbot.MagicRobot):
             self.sd.putValue("Shooter: ", 0)
 
         # intake
-        if self.drive_controller.getBButton():
-            self.intake_motor.set(0.3)
-            self.sd.putValue("Intake: ", "Out")
-        elif self.drive_controller.getAButton():
-            self.intake_motor.set(-0.5)
-            self.sd.putValue("Intake: ", "In")
-        else:
-            self.intake_motor.set(0)
-            self.sd.putValue("Intake: ", "0")
+        # if self.drive_controller.getBButton():
+        #     self.intake_motor.set(0.3)
+        #     self.sd.putValue("Intake: ", "Out")
+        # elif self.drive_controller.getAButton():
+        #     self.intake_motor.set(-0.5)
+        #     self.sd.putValue("Intake: ", "In")
+        # else:
+        #     self.intake_motor.set(0)
+        #     self.sd.putValue("Intake: ", "0")
 
         # tower
         if self.drive_controller.getRightBumper():
@@ -250,7 +265,6 @@ class SpartaBot(magicbot.MagicRobot):
         self.sd.putValue("Horizontal offset", self.limelight.getNumber('tx', None))
         self.sd.putValue("Vertical offset", self.limelight.getNumber('ty', None))
 
-        wpilib.CameraServer.launch()
 
 
         # if self.drive_controller.getLeftStickButtonReleased():
@@ -259,8 +273,12 @@ class SpartaBot(magicbot.MagicRobot):
         # if self.drive_controller.getRightStickButtonReleased():
         #     self.solenoid.set(DoubleSolenoid.Value.kReverse)
         #     self.sd.putValue("Gear", "High")
-        if self.drive_controller.getXButtonReleased():
-            self.solenoid.toggle()
+
+
+
+
+        # if self.drive_controller.getXButtonReleased():
+        #     self.solenoid.toggle()
 
 
         # if self.drive_controller.getXButtonReleased():
