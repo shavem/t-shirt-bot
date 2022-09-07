@@ -100,7 +100,7 @@ class SpartaBot(magicbot.MagicRobot):
         # # self.solenoid.set(DoubleSolenoid.Value.kReverse)
         # self.sd.putValue("Gear", "Unchanged")
 
-        self.drive_controller = wpilib.XboxController(1)
+        self.drive_controller = wpilib.XboxController(0)
 
         # drivetrain
         self.drivetrain_right_motor_master = ctre.WPI_TalonFX(6)
@@ -119,9 +119,9 @@ class SpartaBot(magicbot.MagicRobot):
         # ---Shooter--- #
         #
         # Left
-        self.shooter_motor_left = ctre.WPI_TalonFX(10)
+        self.shooter_motor_left = ctre.WPI_TalonFX(9)
         # Right
-        self.shooter_motor_right = ctre.WPI_TalonFX(9)
+        self.shooter_motor_right = ctre.WPI_TalonFX(10)
 
         # ---Intake--- #
         self.intake_motor = rev.CANSparkMax(1, MOTOR_BRUSHED)
@@ -178,6 +178,8 @@ class SpartaBot(magicbot.MagicRobot):
         # self.drive.setSafetyEnabled(False)
 
     def teleopPeriodic(self):
+
+        # print(self.compressor.getCompressorCurrent())
 
         # Solenoid test
         # if self.drive_controller.getBButtonReleased():
