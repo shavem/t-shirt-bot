@@ -14,6 +14,7 @@ import time
 
 # Push code to RoboRIO
 '''python py/robot/robot.py deploy --skip-tests'''
+'''py py/robot/robot.py deploy --skip-tests --no-version-check'''
 
 # idrk what this does
 '''py -3 -m pip install -U robotpy[ctre]'''
@@ -100,7 +101,7 @@ class SpartaBot(magicbot.MagicRobot):
         # # self.solenoid.set(DoubleSolenoid.Value.kReverse)
         # self.sd.putValue("Gear", "Unchanged")
 
-        self.drive_controller = wpilib.XboxController(0)
+        self.drive_controller = wpilib.XboxController(1)
 
         # drivetrain
         self.drivetrain_right_motor_master = ctre.WPI_TalonFX(6)
@@ -182,12 +183,12 @@ class SpartaBot(magicbot.MagicRobot):
         # print(self.compressor.getCompressorCurrent())
 
         # Solenoid test
-        # if self.drive_controller.getBButtonReleased():
-        #     self.solenoid.set(DoubleSolenoid.Value.kForward)
-        #     time.sleep(0.5)
-        #     self.solenoid.set(DoubleSolenoid.Value.kReverse)
-        # self.solenoidp1.toggle()
-        # self.solenoidp2.toggle()
+        #if self.drive_controller.getBButtonReleased():
+        #    self.solenoid.set(DoubleSolenoid.Value.kForward)
+        #    time.sleep(0.5)
+        #    self.solenoid.set(DoubleSolenoid.Value.kReverse)
+        #    self.solenoidp1.toggle()
+        #    self.solenoidp2.toggle()
 
         angle = self.drive_controller.getRightX()
         speed = self.drive_controller.getLeftY()
@@ -217,8 +218,8 @@ class SpartaBot(magicbot.MagicRobot):
             # print("Shooter speed: " + str(self.drive_controller.getLeftTriggerAxis()))
 
         if self.drive_controller.getAButton():
-            self.shooter_motor_left.set(-0.5)
-            self.shooter_motor_right.set(0.5)
+            self.shooter_motor_left.set(-0.55)
+            self.shooter_motor_right.set(0.55)
             self.sd.putValue("Shooter: ", 0.5)
         elif self.drive_controller.getRightTriggerAxis() > 0.05:
             self.shooter_motor_left.set(-self.drive_controller.getRightTriggerAxis())
@@ -279,8 +280,8 @@ class SpartaBot(magicbot.MagicRobot):
 
 
 
-        # if self.drive_controller.getXButtonReleased():
-        #     self.solenoid.toggle()
+        #if self.drive_controller.getXButtonReleased():
+        #    self.solenoid.toggle()
 
 
         # if self.drive_controller.getXButtonReleased():
