@@ -218,8 +218,8 @@ class SpartaBot(magicbot.MagicRobot):
             # print("Shooter speed: " + str(self.drive_controller.getLeftTriggerAxis()))
 
         if self.drive_controller.getAButton():
-            self.shooter_motor_left.set(-0.55)
-            self.shooter_motor_right.set(0.55)
+            self.shooter_motor_left.set(-0.56)
+            self.shooter_motor_right.set(0.56)
             self.sd.putValue("Shooter: ", 0.5)
         elif self.drive_controller.getRightTriggerAxis() > 0.05:
             self.shooter_motor_left.set(-self.drive_controller.getRightTriggerAxis())
@@ -227,6 +227,15 @@ class SpartaBot(magicbot.MagicRobot):
             self.sd.putValue("Shooter: ", self.drive_controller.getRightTriggerAxis())
             # self.shooter_automation.fire(self.drive_controller.getRightTriggerAxis())
             # print("Shooter speed: " + str(self.drive_controller.getTriggerAxis(CONTROLLER_LEFT)))
+        else:
+            self.shooter_motor_left.set(0)
+            self.shooter_motor_right.set(0)
+            self.sd.putValue("Shooter: ", 0)
+
+        if self.drive_controller.getXButton():
+            self.shooter_motor_left.set(-0.58)
+            self.shooter_motor_right.set(0.58)
+            self.sd.putValue("Shooter: ", 0.5)
         else:
             self.shooter_motor_left.set(0)
             self.shooter_motor_right.set(0)
